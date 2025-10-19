@@ -23,6 +23,10 @@ LINECOMMENT	"//".*\n
 #include "srcpos.h"
 #include "dtc-parser.tab.h"
 
+//<<<<<<< HEAD
+//=======
+//extern YYLTYPE yylloc;
+//>>>>>>> 69087df1bccb (Resolve double definition of yylloc)
 extern bool treesource_error;
 
 /* CAUTION: this will stop working if we ever use yyless() or yyunput() */
