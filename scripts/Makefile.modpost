@@ -125,6 +125,15 @@ ifeq ($(wildcard $(objtree)/Module.symvers),)
 missing-input := $(objtree)/Module.symvers
 else
 modpost-args += -i $(objtree)/Module.symvers
+
+ifneq ($(wildcard ../esp_cache/Module.symvers),)
+modpost-args += -i ../esp_cache/Module.symvers
+endif
+
+ifneq ($(wildcard ../contig_alloc/Module.symvers),)
+modpost-args += -i ../contig_alloc/Module.symvers
+endif
+
 modpost-deps += $(objtree)/Module.symvers
 endif
 

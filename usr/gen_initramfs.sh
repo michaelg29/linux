@@ -244,6 +244,15 @@ while [ $# -gt 0 ]; do
 	esac
 done
 
+# ESP modifications
+echo "cpio_list is $cpio_list"
+cat $cpio_list \
+  | sed -e 's/^file \(\/bin\/busybox .*\) 755 0 0/file \1 4755 0 0/' \
+  > ${cpio_list}.sed
+echo "nod /dev/console 622 0 0 c 5 1" >> $cpio_list
+cp $cpio_list ./cpio_list.bak
+cp $cpio_list.sed ./cpio_list.sed.bak
+
 # If output_file is set we will generate cpio archive
 # we are careful to delete tmp files
-usr/gen_init_cpio $timestamp $cpio_list > $output
+usr/gen_init_cpio $timestamp ${cpio_list}.sed > $output

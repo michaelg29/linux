@@ -579,7 +579,8 @@ LINUXINCLUDE    := \
 		-I$(objtree)/arch/$(SRCARCH)/include/generated \
 		-I$(srctree)/include \
 		-I$(objtree)/include \
-		$(USERINCLUDE)
+		$(USERINCLUDE) \
+		$(ESPINCLUDE)
 
 KBUILD_AFLAGS   := -D__ASSEMBLY__ -fno-PIE
 

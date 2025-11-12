@@ -15,15 +15,15 @@
 #ifdef CONFIG_RISCV_ISA_SUPM
 static inline unsigned long __untagged_addr_remote(struct mm_struct *mm, unsigned long addr)
 {
-	if (riscv_has_extension_unlikely(RISCV_ISA_EXT_SUPM)) {
-		u8 pmlen = mm->context.pmlen;
+	//if (riscv_has_extension_unlikely(RISCV_ISA_EXT_SUPM)) {
+	//	u8 pmlen = mm->context.pmlen;
 
 		/* Virtual addresses are sign-extended; physical addresses are zero-extended. */
-		if (IS_ENABLED(CONFIG_MMU))
-			return (long)(addr << pmlen) >> pmlen;
-		else
-			return (addr << pmlen) >> pmlen;
-	}
+	//	if (IS_ENABLED(CONFIG_MMU))
+	//		return (long)(addr << pmlen) >> pmlen;
+	//	else
+	//		return (addr << pmlen) >> pmlen;
+	//}
 
 	return addr;
 }
