@@ -25,6 +25,9 @@
 #include <linux/kasan.h>
 #include <linux/bpf_verifier.h>
 #include <linux/uaccess.h>
+#include <linux/io.h>
+#include <linux/platform_device.h>
+#include <linux/spinlock.h>
 
 #include "../../lib/kstrtox.h"
 
@@ -655,6 +658,255 @@ const struct bpf_func_proto bpf_event_output_data_proto =  {
 	.arg4_type      = ARG_PTR_TO_MEM | MEM_RDONLY,
 	.arg5_type      = ARG_CONST_SIZE_OR_ZERO,
 };
+
+BPF_CALL_3(bpf_esp_map, void *, addr_mem, u32, size,
+	   const void __user *, phys_addr)
+{
+/*
+typedef u64 dma_addr_t;
+
+struct bus_dma_region {
+        phys_addr_t cpu_start;
+        dma_addr_t dma_start;
+        u64 size;
+};
+
+struct device_dma_parameters {
+        unsigned int max_segment_size;
+        unsigned int min_align_mask;
+        long unsigned int segment_boundary_mask;
+};
+
+
+
+struct resource {
+        resource_size_t start;
+        resource_size_t end;
+        const char *name;
+        long unsigned int flags;
+        long unsigned int desc;
+        struct resource *parent;
+        struct resource *sibling;
+        struct resource *child;
+};
+
+struct device {
+        struct kobject kobj;
+        struct device *parent;
+        struct device_private *p;
+        const char *init_name;
+        const struct device_type *type;
+        const struct bus_type *bus;
+        struct device_driver *driver;
+        void *platform_data;
+        void *driver_data;
+        struct mutex mutex;
+        struct dev_links_info links;
+        struct dev_pm_info power;
+        struct dev_pm_domain *pm_domain;
+        struct dev_msi_info msi;
+        u64 *dma_mask;
+        u64 coherent_dma_mask;
+        u64 bus_dma_limit;
+        const struct bus_dma_region *dma_range_map;
+        struct device_dma_parameters *dma_parms;
+        struct list_head dma_pools;
+        struct dma_coherent_mem *dma_mem;
+        struct io_tlb_mem *dma_io_tlb_mem;
+        struct dev_archdata archdata;
+        struct device_node *of_node;
+        struct fwnode_handle *fwnode;
+        dev_t devt;
+        u32 id;
+        spinlock_t devres_lock;
+        struct list_head devres_head;
+        const struct class *class;
+        const struct attribute_group **groups;
+        void (*release)(struct device *);
+        struct iommu_group *iommu_group;
+        struct dev_iommu *iommu;
+        struct device_physical_location *physical_location;
+        enum device_removable removable;
+        bool offline_disabled: 1;
+        bool offline: 1;
+        bool of_node_reused: 1;
+        bool state_synced: 1;
+        bool can_match: 1;
+        bool dma_coherent: 1;
+        bool dma_skip_sync: 1;
+};
+
+struct platform_device {
+        const char *name;
+        int id;
+        bool id_auto;
+        struct device dev;
+        u64 platform_dma_mask;
+        struct device_dma_parameters dma_parms;
+        u32 num_resources;
+        struct resource *resource;
+        const struct platform_device_id *id_entry;
+        const char *driver_override;
+        struct mfd_cell *mfd_cell;
+        struct pdev_archdata archdata;
+};
+*/
+
+	//struct of_device_id fft_device_ids[] = {
+	//        {
+	//	        .name = "SLD_FFT_STRATUS",
+	//        },
+	//        {
+	//	        .name = "eb_059",
+	//        },
+	//        {
+	//	        .compatible = "sld,fft_stratus",
+	//        },
+	//        {},
+	//};
+
+	struct resource dev_resource = {
+		.start = (u64)phys_addr,
+		.end = (u64)phys_addr + (u64)size,
+		.name = "fft_stratus",
+		.flags = IORESOURCE_MEM,
+		.desc = 0,
+		.parent = NULL,
+		.sibling = NULL,
+		.child = NULL
+	};
+	//struct bus_dma_region dma_region = {
+	//	.cpu_start = (u64)phys_addr,
+	//	.dma_start = (u64)phys_addr,
+	//	.size = (u64)size
+	//};
+	//struct platform_device pdev = {
+	//	.id = 100,
+	//	.platform_dma_mask = 0xffffffffffffffff,
+	//	.resource = &dev_resource,
+	//	.dev = {
+	//		//.dma_range_map = &dma_region
+	//	}
+	//};
+	LIST_HEAD(devres_head);
+	struct device dev = {
+		.id = 0,
+		.devres_head = devres_head,
+		.dma_coherent = true,
+		.dma_skip_sync = false
+	};
+	spin_lock_init(&dev.devres_lock);
+
+	u64 *addr_ptr = (u64*)addr_mem;
+	if (*addr_ptr) return 0;
+
+	//struct resource *res = platform_get_resource(&pdev, IORESOURCE_MEM, 0);
+	*addr_ptr = (u64)devm_ioremap_resource(&dev, &dev_resource);
+	//*addr_ptr = (u64)devm_ioremap(&pdev.dev, (u64)phys_addr, size);
+	//*addr_ptr = (u64)ioremap((u64)phys_addr, size);
+	//*addr_ptr = (u64)ioremap_prot((u64)phys_addr, size,
+        //        __pgprot(_PAGE_IOREMAP | _PAGE_NOCACHE));
+	//*addr_ptr = (u64)early_ioremap((u64)phys_addr, size);
+	return 0;
+}
+
+#define BPF_FUNC_esp_map 212
+const struct bpf_func_proto bpf_esp_map_proto = {
+	.func		= bpf_esp_map,
+	.gpl_only	= false,
+	.might_sleep	= false,
+	.ret_type	= RET_INTEGER,
+	.arg1_type	= ARG_ANYTHING,
+	.arg2_type	= ARG_ANYTHING,
+	.arg3_type	= ARG_ANYTHING,
+};
+
+BPF_CALL_3(bpf_esp_unmap, void *, addr_mem, u32, size,
+	   void *, virt_addr)
+{
+
+	//*addr_ptr = (u64)devm_ioremap_resource(&dev, &dev_resource);
+	iounmap(virt_addr);
+	return 0;
+}
+
+#define BPF_FUNC_esp_unmap 213
+const struct bpf_func_proto bpf_esp_unmap_proto = {
+	.func		= bpf_esp_unmap,
+	.gpl_only	= false,
+	.might_sleep	= false,
+	.ret_type	= RET_INTEGER,
+	.arg1_type	= ARG_ANYTHING,
+	.arg2_type	= ARG_ANYTHING,
+	.arg3_type	= ARG_ANYTHING,
+};
+
+BPF_CALL_3(bpf_esp_read, void *, dst, u32, size,
+	   void *, virt_addr)
+{
+	u32 val = ioread32((void __iomem *)virt_addr);
+	return val;
+}
+
+#define BPF_FUNC_esp_read 214
+const struct bpf_func_proto bpf_esp_read_proto = {
+	.func		= bpf_esp_read,
+	.gpl_only	= false,
+	.might_sleep	= false,
+	.ret_type	= RET_INTEGER,
+	.arg1_type	= ARG_PTR_TO_UNINIT_MEM,
+	.arg2_type	= ARG_CONST_SIZE_OR_ZERO,
+	.arg3_type	= ARG_ANYTHING,
+};
+
+BPF_CALL_3(bpf_esp_write, void *, vals, u32, size,
+	   void *, virt_addr)
+{
+	//u64 addr = (u64)virt_addr;
+	//u32 i = 0;
+	u32 *arr = (u32*)vals;
+
+	iowrite32(0x12345678, (void __iomem *)((u64)virt_addr + 0x20));
+	writel(0x12345678, (void __iomem *)((u64)virt_addr + 0x20));
+	*((u32 __iomem *)((u64)virt_addr + 0x20)) = 0x12345678;
+
+	//while (size) {
+	//	// if word is marked as a write
+	//	if (size & 1) {
+	//		u32 val = arr[i];
+	//		iowrite32(val, (void*)addr);
+	//	}
+	//	// increment address
+	//	addr += 4;
+	//	++i;
+	//	size >>= 1;
+	//}
+
+	return 0;
+}
+
+#define BPF_FUNC_esp_write 215
+const struct bpf_func_proto bpf_esp_write_proto = {
+	.func		= bpf_esp_read,
+	.gpl_only	= false,
+	.might_sleep	= false,
+	.ret_type	= RET_INTEGER,
+	.arg1_type	= ARG_PTR_TO_FIXED_SIZE_MEM | MEM_RDONLY,
+	.arg1_size      = sizeof(u32),
+	.arg2_type	= ARG_ANYTHING,
+	.arg3_type	= ARG_ANYTHING,
+};
+
+//const struct bpf_func_proto bpf_strtol_proto = {
+//	.func		= bpf_strtol,
+//	.gpl_only	= false,
+//	.ret_type	= RET_INTEGER,
+//	.arg1_type	= ARG_PTR_TO_MEM | MEM_RDONLY,
+//	.arg2_type	= ARG_CONST_SIZE,
+//	.arg3_type	= ARG_ANYTHING,
+//	.arg4_type	= ARG_PTR_TO_FIXED_SIZE_MEM | MEM_UNINIT | MEM_WRITE | MEM_ALIGNED,
+//	.arg4_size	= sizeof(s64),
+//};
 
 BPF_CALL_3(bpf_copy_from_user, void *, dst, u32, size,
 	   const void __user *, user_ptr)
@@ -1970,6 +2222,14 @@ bpf_base_func_proto(enum bpf_func_id func_id, const struct bpf_prog *prog)
 		return &bpf_get_ns_current_pid_tgid_proto;
 	case BPF_FUNC_get_current_uid_gid:
 		return &bpf_get_current_uid_gid_proto;
+	case BPF_FUNC_esp_map:
+		return &bpf_esp_map_proto;
+	case BPF_FUNC_esp_unmap:
+		return &bpf_esp_unmap_proto;
+	case BPF_FUNC_esp_read:
+		return &bpf_esp_read_proto;
+	case BPF_FUNC_esp_write:
+		return &bpf_esp_write_proto;
 	default:
 		break;
 	}

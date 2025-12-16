@@ -126,18 +126,23 @@ missing-input := $(objtree)/Module.symvers
 else
 modpost-args += -i $(objtree)/Module.symvers
 
-ifneq ($(wildcard ../esp_cache/Module.symvers),)
-modpost-args += -i ../esp_cache/Module.symvers
+ifneq ($(wildcard $(objtree)/../drivers/esp_cache/Module.symvers),)
+modpost-args += -i $(objtree)/../drivers/esp_cache/Module.symvers
 endif
 
-ifneq ($(wildcard ../contig_alloc/Module.symvers),)
-modpost-args += -i ../contig_alloc/Module.symvers
+ifneq ($(wildcard $(objtree)/../drivers/contig_alloc/Module.symvers),)
+modpost-args += -i $(objtree)/../drivers/contig_alloc/Module.symvers
+endif
+
+ifneq ($(wildcard $(objtree)/../drivers/esp/Module.symvers),)
+modpost-args += -i $(objtree)/../drivers/esp/Module.symvers
 endif
 
 modpost-deps += $(objtree)/Module.symvers
 endif
 
 modpost-args += -e $(addprefix -i , $(KBUILD_EXTRA_SYMBOLS))
+$(info modpost-args is $(modpost-args))
 
 endif # ($(KBUILD_EXTMOD),)
 

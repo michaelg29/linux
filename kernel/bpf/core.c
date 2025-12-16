@@ -3001,6 +3001,11 @@ const struct bpf_func_proto bpf_seq_printf_btf_proto __weak;
 const struct bpf_func_proto bpf_set_retval_proto __weak;
 const struct bpf_func_proto bpf_get_retval_proto __weak;
 
+const struct bpf_func_proto bpf_esp_map_proto __weak;
+const struct bpf_func_proto bpf_esp_unmap_proto __weak;
+const struct bpf_func_proto bpf_esp_read_proto __weak;
+const struct bpf_func_proto bpf_esp_write_proto __weak;
+
 const struct bpf_func_proto * __weak bpf_get_trace_printk_proto(void)
 {
 	return NULL;
